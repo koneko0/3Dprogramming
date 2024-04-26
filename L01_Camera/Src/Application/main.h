@@ -58,6 +58,7 @@ private:
 	//板ポリゴン
 	std::shared_ptr<KdSquarePolygon> m_spPoly = nullptr;
 
+	Math::Matrix m_mHamuWorld = Math::Matrix::Identity;
  
 	//地形モデル
 	std::shared_ptr<KdModelData> m_spModel = nullptr;
