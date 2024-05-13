@@ -76,26 +76,50 @@ void Application::Update()
 
 		static float _yRot = 0;
 		Math::Matrix _mRotationY = Math::Matrix::CreateRotationY(DirectX::XMConvertToRadians(_yRot));
-		_yRot += 0.5;
+		//_yRot += 0.5;
 
 
 		//どこに配置されているか
-		Math::Matrix _mTrans = Math::Matrix::CreateTranslation(0, 6.0f, -5.0f);
+		Math::Matrix _mTrans = Math::Matrix::CreateTranslation(0, 6.0, -5.0f);
 
 		//カメラの「ワールド行列」を作成し、適応させる
-		Math::Matrix _worldMat = _mScale * _mRotationX * _mTrans*_mRotationY;
+		Math::Matrix _worldMat = _mScale * _mRotationX * _mTrans*_mRotationY* m_mHamuWorld;
 		m_spCamera->SetCameraMatrix(_worldMat);
 	}
 
 	//ハムの更新
 	{
+		//ベクトル
+		//キャラクターの移動速度（本番では真似しちゃだめ）
+		float moveSpd = 0.05f;
+		Math::Vector3 nowPos = m_mHamuWorld.Translation();
+
+
+		//移動したい「方向ベクトル」=絶対に長さが「1」でなければならない！！！
+		Math::Vector3 moveVec = Math::Vector3::Zero;
+
 		if (GetAsyncKeyState('W'))
 		{
-			
+			moveVec.z = 1.0f;
 		}
-		if (GetAsyncKeyState('A'));
-		if (GetAsyncKeyState('S'));
-		if (GetAsyncKeyState('D'));
+		if (GetAsyncKeyState('A'))
+		{
+			moveVec.x = -1.0f;
+		}
+		if (GetAsyncKeyState('S'))
+		{
+			moveVec.z = -1.0f;
+		}
+		if (GetAsyncKeyState('D'))
+		{
+			moveVec.x = 1.0f;
+		}
+		//正規化（ノーマライズ）
+		moveVec.Normalize();
+		moveVec *= moveSpd;
+		nowPos += moveVec;
+		//キャラクターのワールド行列を創る処理
+		m_mHamuWorld =Math::Matrix::CreateTranslation(nowPos);
 	}
 }
 
