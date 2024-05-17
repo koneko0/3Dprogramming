@@ -1,5 +1,6 @@
 ﻿#include "main.h"
-
+#include"HamuHamu.h"
+#include"Terrain.h"
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
 // エントリーポイント
 // アプリケーションはこの関数から進行する
@@ -83,44 +84,15 @@ void Application::Update()
 		Math::Matrix _mTrans = Math::Matrix::CreateTranslation(0, 6.0, -5.0f);
 
 		//カメラの「ワールド行列」を作成し、適応させる
-		Math::Matrix _worldMat = _mScale * _mRotationX * _mTrans*_mRotationY* m_mHamuWorld;
+		Math::Matrix _worldMat = _mScale * _mRotationX * _mTrans * _mRotationY;
 		m_spCamera->SetCameraMatrix(_worldMat);
 	}
-
-	//ハムの更新
+	//全オブジェクト更新
+	for (std::shared_ptr<KdGameObject>obj : m_GamuObjList)
 	{
-		//ベクトル
-		//キャラクターの移動速度（本番では真似しちゃだめ）
-		float moveSpd = 0.05f;
-		Math::Vector3 nowPos = m_mHamuWorld.Translation();
-
-
-		//移動したい「方向ベクトル」=絶対に長さが「1」でなければならない！！！
-		Math::Vector3 moveVec = Math::Vector3::Zero;
-
-		if (GetAsyncKeyState('W'))
-		{
-			moveVec.z = 1.0f;
-		}
-		if (GetAsyncKeyState('A'))
-		{
-			moveVec.x = -1.0f;
-		}
-		if (GetAsyncKeyState('S'))
-		{
-			moveVec.z = -1.0f;
-		}
-		if (GetAsyncKeyState('D'))
-		{
-			moveVec.x = 1.0f;
-		}
-		//正規化（ノーマライズ）
-		moveVec.Normalize();
-		moveVec *= moveSpd;
-		nowPos += moveVec;
-		//キャラクターのワールド行列を創る処理
-		m_mHamuWorld =Math::Matrix::CreateTranslation(nowPos);
+		obj->Update();
 	}
+
 }
 
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
@@ -177,13 +149,12 @@ void Application::Draw()
 	// 陰影のあるオブジェクト(不透明な物体や2Dキャラ)はBeginとEndの間にまとめてDrawする
 	KdShaderManager::Instance().m_StandardShader.BeginLit();
 	{
+		//全オブジェクト描画
+		for (std::shared_ptr<KdGameObject>obj : m_GamuObjList)
+		{
+			obj->DrawLit();
+		}
 		
-		//static float Hamu = -5.0;
-		//Math::Matrix _mat = Math::Matrix::CreateTranslation(0, 0, Hamu);
-		//_mat._43 = 5.0f;//直接いじらない
-		KdShaderManager::Instance().m_StandardShader.DrawPolygon(*m_spPoly,m_mHamuWorld);
-		//Hame -= 0.01;
-		KdShaderManager::Instance().m_StandardShader.DrawModel(*m_spModel);
 	}
 	KdShaderManager::Instance().m_StandardShader.EndLit();
 
@@ -295,17 +266,17 @@ bool Application::Init(int w, int h)
 	//===================================================================
 	// ハムスターの初期化
 	//===================================================================
-
-	m_spPoly = std::make_shared<KdSquarePolygon>();
-	m_spPoly->SetMaterial("Asset/Data/LessonData/Character/Hamu.png");
-
-	m_spPoly->SetPivot(KdSquarePolygon::PivotType::Center_Bottom);
-
+	std::shared_ptr<HamuHamu> _Hamu = std::make_shared<HamuHamu>();
+	_Hamu->Init();
+	//重要
+	m_GamuObjList.push_back(_Hamu);
 	//===================================================================
 	// 地形モデルの初期化
 	//===================================================================
-	m_spModel = std::make_shared<KdModelData>();
-	m_spModel->Load("Asset/Data/LessonData/Terrain/Terrain.gltf");
+	
+	std::shared_ptr<Terrain> _Terrain = std::make_shared<Terrain>();
+	_Terrain->Init();
+	m_GamuObjList.push_back(_Terrain);
 
 	return true;
 }
